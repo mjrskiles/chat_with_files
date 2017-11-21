@@ -86,7 +86,8 @@ class Server:
 
         print("Server: Thread opened @client " + str(id))
         name  = sock.recv( 4096 )
-        client_name = name.decode().strip()
+        ins = name.decode().split()
+        client_name = ins[0]
         self.client_socks[id][self.CLIENT_NAME_POS] = client_name
     
         self.client_names[client_name] = id
