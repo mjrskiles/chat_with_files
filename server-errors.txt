@@ -1,0 +1,19 @@
+Traceback (most recent call last):
+  File "ChatServer.py", line 164, in <module>
+    main()
+  File "ChatServer.py", line 162, in main
+    s.get_new_client()
+  File "ChatServer.py", line 66, in get_new_client
+    sock, addr = self.listen_sock.accept()
+  File "/usr/lib/python3.5/socket.py", line 195, in accept
+    fd, addr = self._accept()
+KeyboardInterrupt
+Exception ignored in: <module 'threading' from '/usr/lib/python3.5/threading.py'>
+Traceback (most recent call last):
+  File "/usr/lib/python3.5/threading.py", line 1288, in _shutdown
+    t.join()
+  File "/usr/lib/python3.5/threading.py", line 1054, in join
+    self._wait_for_tstate_lock()
+  File "/usr/lib/python3.5/threading.py", line 1070, in _wait_for_tstate_lock
+    elif lock.acquire(block, timeout):
+KeyboardInterrupt

@@ -37,14 +37,14 @@ def parse_opts( argv, argc ):
             try:
                 int(listen_port)
             except ValueError:
-                print("The listening port was not specified correctly.")
+                print("Client: The listening port was not specified correctly.")
                 usage( argv[0] )
 
         if opt == '-s':
             host = val
             run_as_server = False
             if host == '':
-                print("The host was specified incorrectly.")
+                print("Client: The host was specified incorrectly.")
                 usage( argv[0] )
 
         if opt == '-p':
@@ -103,7 +103,7 @@ class Messenger:
     def accept_connection( self ):
         #socket.accept() returns a (socket, ('host', port)) tuple
         sock, addr = self.listen_sock.accept()
-        print("Connection accepted, addr: " + str(addr))
+        print("Client: Connection accepted, addr: " + str(addr))
         return (sock, addr)
 
     def run_messenger( self ):
@@ -296,11 +296,11 @@ class Server( Messenger ):
         self.text_sock, addr = self.accept_connection()
         self.server_host = addr[0]
         file_req_port = self.text_sock.recv( 4 ).decode()
-        print("Client sent back listen port " + file_req_port + ".")
+        print("Client: Client sent back listen port " + file_req_port + ".")
         try:
             int(file_req_port)
         except ValueError:
-            print("The client did not send back a valid port number.")
+            print("Client: The client did not send back a valid port number.")
             sys.exit(1)
         self.server_port = file_req_port
 

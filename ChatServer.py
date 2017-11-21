@@ -64,17 +64,8 @@ class Server:
         try:
             while True:
                 sock, addr = self.listen_sock.accept()
-                print("Connection accepted, addr: " + str(addr) + " client no. " + str(next_client))
-                file_req_port = sock.recv( 4 ).decode()
-                print("Client sent back listen port " + file_req_port + ".")
-                try:
-                    int(file_req_port)
-                except ValueError:
-                    print("The client did not send back a valid port number.")
-                    sock.close()
-                self.client_socks[next_client] = [sock, '', '']
-                self.client_socks[next_client][self.CLIENT_LISTEN_PORT_POS] = file_req_port
-
+                print("Server: Connection accepted, addr: " + str(addr) + " client no. " + str(next_client))
+                
                 instance = threading.Thread( target=self.get_messages, args=(sock, next_client) )
 #                print("instance created.")
                 instance.start()
@@ -84,13 +75,26 @@ class Server:
             self.listen_sock.close()
 
     def get_messages( self, sock, id ):
-        print("Thread opened @client " + str(id))
-        message = sock.recv( 4096 )
-        client_name = message.decode().strip()
+        file_req_port = sock.recv( 4 ).decode()
+        print("Server: Client " + str(next_client) + " sent back listen port " + file_req_port + ".")
+        try:
+            int(file_req_port)
+        except ValueError:
+            print("Server: The client did not send back a valid port number.")
+            sock.close()
+        self.client_socks[next_client] = [sock, '', '']
+        self.client_socks[next_client][self.CLIENT_LISTEN_PORT_POS] = file_req_port
+
+        print("Server: Thread opened @client " + str(id))
+        name  = sock.recv( 4096 )
+        client_name = name.decode().strip()
         self.client_socks[id][self.CLIENT_NAME_POS] = client_name
+    
         self.client_names[client_name] = id
-        print( 'Client@client ' + str(id) + ' entered their name as ' + client_name )      
+        print( 'Server: Client@client ' + str(id) + ' entered their name as ' + client_name )
+        print( "Server: 1 client name is: " + client_name )
         while True:
+            print( "Server: 2 client name is: " + client_name )
             #the client will send a letter indicating the request type, followed by a ':' 
             #followed by the request text.
             #example: 'm:this is a text message' or 'f:file_name'
@@ -103,17 +107,20 @@ class Server:
             if code == Server.BAD_REQUEST:
                 continue
             if code == Server.MESSAGE_REQUEST:
-                print( self.client_socks[id][self.CLIENT_NAME_POS] + ': ' + messages[1], end='' )
+                print( "Server: client name is: " + self.client_socks[id][self.CLIENT_NAME_POS] )
+                print( "Server: 3 client name is: " + client_name )
+                print( "Server: messages[1] is " + messages[1], end='' )
+                print( "Server: " + self.client_socks[id][self.CLIENT_NAME_POS] + ': ' + messages[1], end='' )
                 self.broadcast_msg( id, messages[1] )
             if code == Server.FILE_REQUEST:
                 rq = messages[1].split(':', 1)
                 owner = rq[0]
                 file_name = rq[1]
-                print( self.client_socks[id][self.CLIENT_NAME_POS] + ' requests to get file ' + file_name + ' from ' + owner )
+                print('Server: ' + self.client_socks[id][self.CLIENT_NAME_POS] + ' requests to get file ' + file_name + ' from ' + owner )
                 self.handle_file_request( sock, owner )
         sock.close()
         self.client_socks.pop(id)
-        print( client_name + ' disconnected and the socket was successfully closed.' )
+        print('Server: ' +  client_name + ' disconnected and the socket was successfully closed.' )
         
     def get_request_type( code ):
         #print(code)
@@ -130,10 +137,11 @@ class Server:
         try:
             sock.send( port.encode() )
         except:
-            print('Error sending back port number for p2p connection.')
+            print('Server: Error sending back port number for p2p connection.')
 
     def broadcast_msg( self, client_id, message ):
         line_to_send = self.client_socks[client_id][self.CLIENT_NAME_POS] + ': ' + message
+        print("Server: line_to_send = " + line_to_send)
         for c in self.client_socks:
             if c != client_id:
                 sock = self.client_socks[c][self.SOCKET_POS]
@@ -146,7 +154,7 @@ class Server:
         except:
             to_name = self.client_socks[id_to][CLIENT_NAME_POS]
             from_name = self.client_socks[id_from][CLIENT_NAME_POS]
-            print('Sending message to ' + to_name + ' from ' + from_name + ' failed.')
+            print('Server: Sending message to ' + to_name + ' from ' + from_name + ' failed.')
 
 
 def main():
