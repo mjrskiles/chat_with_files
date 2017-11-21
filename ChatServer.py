@@ -89,8 +89,7 @@ class Server:
         client_name = message.decode().strip()
         self.client_socks[id][self.CLIENT_NAME_POS] = client_name
         self.client_names[client_name] = id
-        print( 'Client@client ' + str(id) + ' entered their name as ' + client_name )
-        
+        print( 'Client@client ' + str(id) + ' entered their name as ' + client_name )      
         while True:
             #the client will send a letter indicating the request type, followed by a ':' 
             #followed by the request text.
@@ -104,13 +103,13 @@ class Server:
             if code == Server.BAD_REQUEST:
                 continue
             if code == Server.MESSAGE_REQUEST:
-                print( client_name + ': ' + messages[1], end='' )
+                print( self.client_socks[id][self.CLIENT_NAME_POS] + ': ' + messages[1], end='' )
                 self.broadcast_msg( id, messages[1] )
             if code == Server.FILE_REQUEST:
                 rq = messages[1].split(':', 1)
                 owner = rq[0]
                 file_name = rq[1]
-                print( client_name + ' requests to get file ' + file_name + ' from ' + owner )
+                print( self.client_socks[id][self.CLIENT_NAME_POS] + ' requests to get file ' + file_name + ' from ' + owner )
                 self.handle_file_request( sock, owner )
         sock.close()
         self.client_socks.pop(id)
