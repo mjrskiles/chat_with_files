@@ -180,33 +180,35 @@ class Messenger:
         self.send_text( request )
         file_req_port = self.text_sock.recv( 4 ).decode()
         print("Server sent back listen port " + file_req_port + ".")
+        getfile = True
         try:
             int(file_req_port)
         except ValueError:
             print("The server did not send back a valid port number.")
-            sys.exit(1)
-        self.server_port = file_req_port
-        # this only works on localhost right now.  Would need to get the server
-        # to send back the client address as well.
-        try:
-            file_sock = self.request_connection( self.server_host, self.server_port )
-            if file_sock:
-                print("file_sock opened")
-            file_sock.send( file_name.encode() )
-            file_size_bytes = file_sock.recv( 4 )
-            if file_size_bytes:
-                file_size= struct.unpack( '!L', file_size_bytes[:4] )[0]
-                if file_size:
-                    Messenger.receive_file( file_sock, file_name )
+            getfile = False
+        if getfile:
+            self.server_port = file_req_port
+            # this only works on localhost right now.  Would need to get the server
+            # to send back the client address as well.
+            try:
+                file_sock = self.request_connection( self.server_host, self.server_port )
+                if file_sock:
+                    print("file_sock opened")
+                file_sock.send( file_name.encode() )
+                file_size_bytes = file_sock.recv( 4 )
+                if file_size_bytes:
+                    file_size= struct.unpack( '!L', file_size_bytes[:4] )[0]
+                    if file_size:
+                        Messenger.receive_file( file_sock, file_name )
+                    else:
+                        print( 'File does not exist or is empty' )
                 else:
                     print( 'File does not exist or is empty' )
-            else:
-                print( 'File does not exist or is empty' )
-        except:
-            print("Could not open connection to file server.")
-        finally:
-            if file_sock:
-                file_sock.close()
+            except:
+                print("Could not open connection to file server.")
+            finally:
+                if file_sock:
+                    file_sock.close()
 
     def receive_file( sock, filename ):
         """receive the file lines returned from the server"""

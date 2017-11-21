@@ -115,7 +115,7 @@ class Server:
         print( client_name + ' disconnected and the socket was successfully closed.' )
         
     def get_request_type( code ):
-        print(code)
+        #print(code)
         if code == 'm':
             return Server.MESSAGE_REQUEST
         if code == 'f':
