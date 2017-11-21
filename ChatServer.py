@@ -119,8 +119,10 @@ class Server:
                 rq = messages[1].split(':', 1)
                 owner = rq[0]
                 file_name = rq[1]
-                print('Server: ' + self.client_socks[id][self.CLIENT_NAME_POS] + ' requests to get file ' + file_name + ' from ' + owner )
-                self.handle_file_request( sock, owner )
+                print('Server: ' + self.client_socks[id][self.CLIENT_NAME_POS] \
+                    + ' requests to get file ' + file_name + ' from ' + owner )
+                instance = threading.Thread( target=self.handle_file_request, args=(sock, id, owner, file_name) )
+                instance.start()
             request = sock.recv( 4096 )
         sock.close()
         self.client_socks.pop(id)
@@ -135,17 +137,24 @@ class Server:
         else:
             return Server.BAD_REQUEST
 
-    def handle_file_request( self, sock, owner ):
+    def handle_file_request( self, sock, fromid, owner, file_name ):
+        requester_port = self.client_socks[fromid][self.CLIENT_LISTEN_PORT_POS]
         owner_id = self.client_names[owner]
         port = self.client_socks[owner_id][self.CLIENT_LISTEN_PORT_POS]
+        """Opens a connection to the file server and receives the file"""
         try:
-            sock.send( port.encode() )
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect( ('localhost', int(requester_port)) )
+            msg = str(port) + ':' + file_name
+            sock.send ( msg.encode() )
+            sock.close()
         except:
-            print('Server: Error sending back port number for p2p connection.')
+            print( 'Server: could not send port + filename')
+
 
     def broadcast_msg( self, client_id, message ):
         line_to_send = self.client_socks[client_id][self.CLIENT_NAME_POS] + ': ' + message
-        print("Server: line_to_send = " + line_to_send)
+#        print("Server: line_to_send = " + line_to_send)
         for c in self.client_socks:
             if c != client_id:
                 sock = self.client_socks[c][self.SOCKET_POS]

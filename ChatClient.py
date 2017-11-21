@@ -155,7 +155,7 @@ class Messenger:
                 print("Which file do you want?")
                 file_name = sys.stdin.readline().rstrip('\n')
                 request = 'f:' + owner + ':' + file_name
-                self.get_file( request, file_name )
+                self.send_text( request )
         self.clean_up()
 
     def send_text( self, text ):
@@ -173,42 +173,32 @@ class Messenger:
         self.threads.append(file_conn)
         file_conn.start()
 
-    def request_file( self, request, file_name ):
+    def request_file( self, port, file_name ):
         """
         Gets the client connection info from the server then
         opens a p2p connection to another client and receives the file"""
-        self.send_text( request )
-        file_req_port = self.text_sock.recv( 4 ).decode()
-        print("Server sent back listen port " + file_req_port + ".")
-        getfile = True
+    
+        # this only works on localhost right now.  Would need to get the server
+        # to send back the client address as well.
         try:
-            int(file_req_port)
-        except ValueError:
-            print("The server did not send back a valid port number.")
-            getfile = False
-        if getfile:
-            self.server_port = file_req_port
-            # this only works on localhost right now.  Would need to get the server
-            # to send back the client address as well.
-            try:
-                file_sock = self.request_connection( self.server_host, self.server_port )
-                if file_sock:
-                    print("file_sock opened")
-                file_sock.send( file_name.encode() )
-                file_size_bytes = file_sock.recv( 4 )
-                if file_size_bytes:
-                    file_size= struct.unpack( '!L', file_size_bytes[:4] )[0]
-                    if file_size:
-                        Messenger.receive_file( file_sock, file_name )
-                    else:
-                        print( 'File does not exist or is empty' )
+            file_sock = self.request_connection( 'localhost', port )
+            if file_sock:
+                print("file_sock opened")
+            file_sock.send( file_name.encode() )
+            file_size_bytes = file_sock.recv( 4 )
+            if file_size_bytes:
+                file_size= struct.unpack( '!L', file_size_bytes[:4] )[0]
+                if file_size:
+                    Messenger.receive_file( file_sock, file_name )
                 else:
                     print( 'File does not exist or is empty' )
-            except:
-                print("Could not open connection to file server.")
-            finally:
-                if file_sock:
-                    file_sock.close()
+            else:
+                print( 'File does not exist or is empty' )
+        except:
+            print("Could not open connection to file server.")
+        finally:
+            if file_sock:
+                file_sock.close()
 
     def receive_file( sock, filename ):
         """receive the file lines returned from the server"""
@@ -228,17 +218,29 @@ class Messenger:
         print("Opening file server...")
         while True:
             sock, addr = self.accept_connection()
-            file_server = threading.Thread( target=Messenger.handle_request, args=(sock,) )
+            file_server = threading.Thread( target=self.parse_connection_request, args=(sock,) )
             file_server.start()
             self.threads.append(file_server)
 
-    def handle_request( sock ):
+    def parse_connection_request( self, sock ):
+        msg_bytes= sock.recv(1024)
+        # convert the message into a string, which is the name of the desired file
+        request_str = msg_bytes.decode()
+        split_rq = request_str.split(':',1)
+        if len(split_rq) > 1:
+            port = split_rq[0]
+            file_name = split_rq[1]
+            self.request_file( port, file_name )
+        else:
+            file_name = split_rq[0]
+            Messenger.handle_request( sock, file_name )
+
+
+    def handle_request( sock, file_name ):
         """
         Get the requested file name and send the file if it exists.
         """
-        msg_bytes= sock.recv(1024)
-        # convert the message into a string, which is the name of the desired file
-        file_name= msg_bytes.decode()
+        
         # check whether the file exists; if it does, send back the file size
         print("Received file name: {}".format(file_name))
         try:
