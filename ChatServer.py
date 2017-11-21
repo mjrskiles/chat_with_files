@@ -64,8 +64,7 @@ class Server:
         try:
             while True:
                 sock, addr = self.listen_sock.accept()
-                print("Server: Connection accepted, addr: " + str(addr) + " client no. " + str(next_client))
-                
+                print("Server: Connection accepted, addr: " + str(addr) + " client no. " + str(next_client))        
                 instance = threading.Thread( target=self.get_messages, args=(sock, next_client) )
 #                print("instance created.")
                 instance.start()
@@ -76,14 +75,14 @@ class Server:
 
     def get_messages( self, sock, id ):
         file_req_port = sock.recv( 4 ).decode()
-        print("Server: Client " + str(next_client) + " sent back listen port " + file_req_port + ".")
+        print("Server: Client " + str(id) + " sent back listen port " + file_req_port + ".")
         try:
             int(file_req_port)
         except ValueError:
             print("Server: The client did not send back a valid port number.")
             sock.close()
-        self.client_socks[next_client] = [sock, '', '']
-        self.client_socks[next_client][self.CLIENT_LISTEN_PORT_POS] = file_req_port
+        self.client_socks[id] = [sock, '', '']
+        self.client_socks[id][self.CLIENT_LISTEN_PORT_POS] = file_req_port
 
         print("Server: Thread opened @client " + str(id))
         name  = sock.recv( 4096 )
