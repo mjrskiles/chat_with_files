@@ -92,13 +92,14 @@ class Server:
     
         self.client_names[client_name] = id
         print( 'Server: Client@client ' + str(id) + ' entered their name as ' + client_name )
-        print( "Server: 1 client name is: " + client_name )
-        if len(ins) > 1:
-            request = ins[1]
+#        print( "Server: 1 client name is: " + client_name )
+        if len(ins) > 1 and ins[1] != '':
+            print( "Server: ins1: " + str(ins) )
+            request = ins[1].encode()
         else:
             request = sock.recv( 4096 )
         while request:
-            print( "Server: 2 client name is: " + client_name )
+#            print( "Server: 2 client name is: " + client_name )
             #the client will send a letter indicating the request type, followed by a ':' 
             #followed by the request text.
             #example: 'm:this is a text message' or 'f:file_name'
@@ -108,10 +109,10 @@ class Server:
             if code == Server.BAD_REQUEST:
                 continue
             if code == Server.MESSAGE_REQUEST:
-                print( "Server: client name is: " + self.client_socks[id][self.CLIENT_NAME_POS] )
-                print( "Server: 3 client name is: " + client_name )
-                print( "Server: 4")
-                print( "Server: messages[1] is " + messages[1], end='' )
+#                print( "Server: client name is: " + self.client_socks[id][self.CLIENT_NAME_POS] )
+#                print( "Server: 3 client name is: " + client_name )
+#                print( "Server: 4")
+#                print( "Server: messages[1] is " + messages[1], end='' )
                 print( "Server: " + self.client_socks[id][self.CLIENT_NAME_POS] + ': ' + messages[1], end='' )
                 self.broadcast_msg( id, messages[1] )
             if code == Server.FILE_REQUEST:
