@@ -86,21 +86,22 @@ class Server:
 
         print("Server: Thread opened @client " + str(id))
         name  = sock.recv( 4096 )
-        ins = name.decode().split()
+        ins = name.decode().split('\n', 1)
         client_name = ins[0]
         self.client_socks[id][self.CLIENT_NAME_POS] = client_name
     
         self.client_names[client_name] = id
         print( 'Server: Client@client ' + str(id) + ' entered their name as ' + client_name )
         print( "Server: 1 client name is: " + client_name )
-        while True:
+        if len(ins) > 1:
+            request = ins[1]
+        else:
+            request = sock.recv( 4096 )
+        while request:
             print( "Server: 2 client name is: " + client_name )
             #the client will send a letter indicating the request type, followed by a ':' 
             #followed by the request text.
             #example: 'm:this is a text message' or 'f:file_name'
-            request = sock.recv( 4096 )
-            if not request:
-                break
             message = request.decode()
             messages = message.split(':', 1)
             code = Server.get_request_type( messages[0] )
@@ -119,6 +120,7 @@ class Server:
                 file_name = rq[1]
                 print('Server: ' + self.client_socks[id][self.CLIENT_NAME_POS] + ' requests to get file ' + file_name + ' from ' + owner )
                 self.handle_file_request( sock, owner )
+            request = sock.recv( 4096 )
         sock.close()
         self.client_socks.pop(id)
         print('Server: ' +  client_name + ' disconnected and the socket was successfully closed.' )
