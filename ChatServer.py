@@ -108,6 +108,7 @@ class Server:
             if code == Server.MESSAGE_REQUEST:
                 print( "Server: client name is: " + self.client_socks[id][self.CLIENT_NAME_POS] )
                 print( "Server: 3 client name is: " + client_name )
+                print( "Server: 4")
                 print( "Server: messages[1] is " + messages[1], end='' )
                 print( "Server: " + self.client_socks[id][self.CLIENT_NAME_POS] + ': ' + messages[1], end='' )
                 self.broadcast_msg( id, messages[1] )
